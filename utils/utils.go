@@ -1,4 +1,4 @@
-package util
+package utils
 
 import (
 	"reflect"
@@ -26,7 +26,7 @@ func SetValueWithFloatX(v reflect.Value, floatValue string, bitSize int) error {
 }
 
 func SetValueWithIntX(v reflect.Value, intValue string, bitSize int) error {
-	value, err := strconv.ParseInt(envValue, 10, bitSize)
+	value, err := strconv.ParseInt(intValue, 10, bitSize)
 	if err != nil {
 		return err
 	}
@@ -35,8 +35,8 @@ func SetValueWithIntX(v reflect.Value, intValue string, bitSize int) error {
 	return nil
 }
 
-func SetValueWithUintX(v reflect.Value, envValue string, bitSize int) error {
-	value, err := strconv.ParseUint(envValue, 10, bitSize)
+func SetValueWithUintX(v reflect.Value, uintValue string, bitSize int) error {
+	value, err := strconv.ParseUint(uintValue, 10, bitSize)
 	if err != nil {
 		return err
 	}
