@@ -78,6 +78,27 @@ func (this *anyValue) Set(v string) error {
 	return nil
 }
 
+type sliceValue struct {
+	value     reflect.Value
+	separator string
+}
+
+func newSliceValue(v reflect.Value, separator string) *sliceValue {
+	return &sliceValue{value: v, separator: separator}
+}
+
+func (this *sliceValue) String() string {
+	return this.value.String()
+}
+
+func (this *sliceValue) Set(v string) error {
+	sp := this.separator
+	if sp == "" {
+		sp = ":"
+	}
+	return utils.SetValueWithSlice(this.value, v, sp)
+}
+
 var errorHandling = flag.ExitOnError
 
 type UsageFunc func(*Command) func()
@@ -161,7 +182,7 @@ func (this *Command) parseValue(v reflect.Value) error {
 }
 
 func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
-	cmdTag, ok := f.Tag.Lookup("cmd")
+	cmdTag, ok := f.Tag.Lookup("cli")
 	if !ok || cmdTag == "" {
 		return nil
 	}
@@ -195,6 +216,9 @@ func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
 		reflect.Float64:
 		anyValue := newAnyValue(v)
 		this.FlagSet.Var(anyValue, name, usage)
+	case reflect.Slice:
+		sliceValue := newSliceValue(v, f.Tag.Get("separator"))
+		this.FlagSet.Var(sliceValue, name, usage)
 	default:
 		return fmt.Errorf("Can't support type %s", kind.String())
 	}
@@ -203,7 +227,7 @@ func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
 }
 
 func (this *Command) createSubCommand(tag reflect.StructTag) *Command {
-	cmdTag, ok := tag.Lookup("cmd")
+	cmdTag, ok := tag.Lookup("cli")
 	if !ok || cmdTag == "" {
 		return this
 	}

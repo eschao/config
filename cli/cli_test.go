@@ -207,3 +207,31 @@ func TestVariousTypeCommand(t *testing.T) {
 	assert.Equal(float64(2.345), typesConfig.Float64Value)
 	assert.Error(cmd.Parse([]string{"-float64=xxx"}))
 }
+
+func TestCommandWithSlices(t *testing.T) {
+	assert := assert.New(t)
+	conf := test.SlicesConfig{}
+	cmd := New("Slice")
+	assert.NoError(cmd.Init(&conf), "Can't init slice command")
+
+	paths := "/var:/home:/log"
+	debugs := "error;info;debug"
+	values := "100,200,300"
+	args := []string{"-paths", paths, "-debugs", debugs, "-values", values}
+	assert.NoError(cmd.Parse(args))
+
+	assert.Equal(3, len(conf.Paths))
+	assert.Equal("/var", conf.Paths[0])
+	assert.Equal("/home", conf.Paths[1])
+	assert.Equal("/log", conf.Paths[2])
+
+	assert.Equal(3, len(conf.Debugs))
+	assert.Equal("error", conf.Debugs[0])
+	assert.Equal("info", conf.Debugs[1])
+	assert.Equal("debug", conf.Debugs[2])
+
+	assert.Equal(3, len(conf.Values))
+	assert.Equal(100, conf.Values[0])
+	assert.Equal(200, conf.Values[1])
+	assert.Equal(300, conf.Values[2])
+}
