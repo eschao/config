@@ -1,194 +1,259 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
-)
 
-type EnvConfig1 struct {
-	Hostname string   `env:"CONFIG_TEST_HOSTNAME" default:"localhost"`
-	Port     int      `env:"CONFIG_TEST_PORT"`
-	User     string   `env:"CONFIG_TEST_USER"`
-	Password string   `env:"CONFIG_TEST_PASSWORD"`
-	Path1    []string `env:"CONFIG_TEST_PATH1"`
-	Path2    []string `env:"CONFIG_TEST_PATH2" separator:";"`
-	Home     string
-}
+	"github.com/eschao/config/test"
+	"github.com/stretchr/testify/assert"
+)
 
 const (
-	TEST_HOSTNAME = "test-hostname"
-	TEST_PORT     = 8080
-	TEST_USER     = "test-user"
-	TEST_PASSWORD = "test-password"
-	TEST_PATH1    = "/usr:/var:/bin"
-	TEST_PATH2    = "/root;/home;/tmp"
+	LOGIN_USER        = "test-login-user"
+	LOGIN_PASSWORD    = "test-login-passwd"
+	SERVICE_HOST      = "test-service-host"
+	SERVICE_PORT      = 8080
+	SERVICE_LOG_PATH  = "/var/log/service"
+	SERVICE_LOG_LEVEL = "debug"
+	DB_HOST           = "test-db-host"
+	DB_PORT           = 9090
+	DB_USER           = "test-db-user"
+	DB_PASSWORD       = "test-db-password"
+	DB_LOG_PATH       = "/var/log/db"
+	DB_LOG_LEVEL      = "error"
 )
 
-func setEnvConfig1() {
-	os.Setenv("CONFIG_TEST_HOSTNAME", TEST_HOSTNAME)
-	os.Setenv("CONFIG_TEST_PORT", strconv.Itoa(TEST_PORT))
-	os.Setenv("CONFIG_TEST_USER", TEST_USER)
-	os.Setenv("CONFIG_TEST_PASSWORD", TEST_PASSWORD)
-	os.Setenv("CONFIG_TEST_PATH1", TEST_PATH1)
-	os.Setenv("CONFIG_TEST_PATH2", TEST_PATH2)
+func TestLoginConfigEnv(t *testing.T) {
+	os.Setenv("USER", LOGIN_USER)
+	os.Setenv("PASSWORD", LOGIN_PASSWORD)
+	defer os.Unsetenv("USER")
+	defer os.Unsetenv("PASSWORD")
+
+	assert := assert.New(t)
+	loginConfig := test.LoginConfig{}
+	assert.NoError(Parse(&loginConfig))
+
+	assert.Equal(LOGIN_USER, loginConfig.User)
+	assert.Equal(LOGIN_PASSWORD, loginConfig.Password)
 }
 
-func unsetEnvConfig1() {
-	os.Unsetenv("CONFIG_TEST_HOSTNAME")
-	os.Unsetenv("CONFIG_TEST_PORT")
-	os.Unsetenv("CONFIG_TEST_USER")
-	os.Unsetenv("CONFIG_TEST_PASSWORD")
+func TestLoginConfigEnvWithPrefix(t *testing.T) {
+	os.Setenv("DB_USER", LOGIN_USER)
+	os.Setenv("DB_PASSWORD", LOGIN_PASSWORD)
+	defer os.Unsetenv("DB_USER")
+	defer os.Unsetenv("DB_PASSWORD")
+
+	assert := assert.New(t)
+	loginConfig := test.LoginConfig{}
+	assert.NoError(ParseWith(&loginConfig, "DB_"))
+	assert.Equal(LOGIN_USER, loginConfig.User)
+	assert.Equal(LOGIN_PASSWORD, loginConfig.Password)
 }
 
-func assertEqual(expected, actual []string) (bool, error) {
-	if len(expected) != len(actual) {
-		return false, fmt.Errorf("Expected length of array is %d, but actual is %d",
-			len(expected), len(actual))
-	}
+func TestServiceConfigEnv(t *testing.T) {
+	servicePrefix := "CONFIG_TEST_SERVICE_"
+	serviceLogPrefix := servicePrefix + "LOG_"
+	dbPrefix := servicePrefix + "DB_"
+	dbLogPrefix := dbPrefix + "LOG_"
 
-	for i := 0; i < len(expected); i++ {
-		if expected[i] != actual[i] {
-			return false, fmt.Errorf("Expected array[%d]=%s, but acutal array[%d]=%s",
-				i, expected[i], i, actual[i])
-		}
-	}
+	os.Setenv(servicePrefix+"HOST", SERVICE_HOST)
+	os.Setenv(servicePrefix+"PORT", strconv.Itoa(SERVICE_PORT))
+	os.Setenv(serviceLogPrefix+"PATH", SERVICE_LOG_PATH)
+	os.Setenv(serviceLogPrefix+"LEVEL", SERVICE_LOG_LEVEL)
+	os.Setenv(dbPrefix+"HOST", DB_HOST)
+	os.Setenv(dbPrefix+"PORT", strconv.Itoa(DB_PORT))
+	os.Setenv(dbPrefix+"USER", DB_USER)
+	os.Setenv(dbPrefix+"PASSWORD", DB_PASSWORD)
+	os.Setenv(dbLogPrefix+"PATH", DB_LOG_PATH)
+	os.Setenv(dbLogPrefix+"LEVEL", DB_LOG_LEVEL)
 
-	return true, nil
+	defer os.Unsetenv(servicePrefix + "HOST")
+	defer os.Unsetenv(servicePrefix + "PORT")
+	defer os.Unsetenv(serviceLogPrefix + "PATH")
+	defer os.Unsetenv(serviceLogPrefix + "LEVEL")
+	defer os.Unsetenv(dbPrefix + "HOST")
+	defer os.Unsetenv(dbPrefix + "PORT")
+	defer os.Unsetenv(dbPrefix + "USER")
+	defer os.Unsetenv(dbPrefix + "PASSWORD")
+	defer os.Unsetenv(dbLogPrefix + "PATH")
+	defer os.Unsetenv(dbLogPrefix + "LEVEL")
+
+	assert := assert.New(t)
+	serviceConfig := test.ServiceConfig{}
+	assert.NoError(Parse(&serviceConfig))
+	assert.Equal(SERVICE_HOST, serviceConfig.Host)
+	assert.Equal(SERVICE_PORT, serviceConfig.Port)
+	assert.Equal(SERVICE_LOG_PATH, serviceConfig.Log.Path)
+	assert.Equal(SERVICE_LOG_LEVEL, serviceConfig.Log.Level)
+	assert.Equal(DB_HOST, serviceConfig.DBConfig.Host)
+	assert.Equal(DB_PORT, serviceConfig.DBConfig.Port)
+	assert.Equal(DB_USER, serviceConfig.DBConfig.User)
+	assert.Equal(DB_PASSWORD, serviceConfig.DBConfig.Password)
+	assert.Equal(DB_LOG_PATH, serviceConfig.DBConfig.Log.Path)
+	assert.Equal(DB_LOG_LEVEL, serviceConfig.DBConfig.Log.Level)
 }
 
-func TestEnvConfig1(t *testing.T) {
-	setEnvConfig1()
-	defer unsetEnvConfig1()
+func TestServiceLoginConfigEnv(t *testing.T) {
+	serviceLoginPrefix := "CONFIG_TEST_SERVICE_LOGIN_"
+	os.Setenv(serviceLoginPrefix+"USER", LOGIN_USER)
+	os.Setenv(serviceLoginPrefix+"PASSWORD", LOGIN_PASSWORD)
+	defer os.Unsetenv(serviceLoginPrefix + "USER")
+	defer os.Unsetenv(serviceLoginPrefix + "PASSWORD")
 
-	conf := EnvConfig1{}
-	err := Unmarshal(&conf)
-	if err != nil {
-		t.Errorf("Can't unmarshal config1 from environemnt variables. %s",
-			err.Error())
-		return
-	}
-
-	if conf.Hostname != TEST_HOSTNAME {
-		t.Errorf("Expect Hostname: %s, but got: %s", TEST_HOSTNAME, conf.Hostname)
-	}
-
-	if conf.Port != TEST_PORT {
-		t.Errorf("Expect Port: %d, but got: %d", TEST_PORT, conf.Port)
-	}
-
-	if conf.User != TEST_USER {
-		t.Errorf("Expect User: %s, but got: %s", TEST_USER, conf.User)
-	}
-
-	if conf.Password != TEST_PASSWORD {
-		t.Errorf("Expect Password: %s, but got: %s", TEST_PASSWORD, conf.Password)
-	}
-
-	if conf.Home != "" {
-		t.Errorf("Expect Home is empty, but got: %s", conf.Home)
-	}
-
-	expectedPath1 := strings.Split(TEST_PATH1, ":")
-	if ok, err := assertEqual(expectedPath1, conf.Path1); !ok {
-		t.Error(err.Error())
-	}
-
-	expectedPath2 := strings.Split(TEST_PATH2, ";")
-	if ok, err := assertEqual(expectedPath2, conf.Path2); !ok {
-		t.Error(err.Error())
-	}
+	assert := assert.New(t)
+	serviceConfig := test.ServiceConfig{Login: &test.LoginConfig{}}
+	assert.NoError(Parse(&serviceConfig))
+	assert.Equal(LOGIN_USER, serviceConfig.Login.User)
+	assert.Equal(LOGIN_PASSWORD, serviceConfig.Login.Password)
 }
 
-func TestEnvConfig1WithDefaultValue(t *testing.T) {
-	os.Setenv("CONFIG_TEST_PORT", strconv.Itoa(TEST_PORT))
-	os.Setenv("CONFIG_TEST_USER", TEST_USER)
-	os.Setenv("CONFIG_TEST_PASSWORD", TEST_PASSWORD)
-	defer unsetEnvConfig1()
+func TestTypesConfigEnv(t *testing.T) {
+	typesPrefix := "CONFIG_TEST_"
+	os.Setenv(typesPrefix+"BOOL", "true")
+	os.Setenv(typesPrefix+"STR", "test-string")
+	os.Setenv(typesPrefix+"INT8", "100")
+	os.Setenv(typesPrefix+"INT16", "1000")
+	os.Setenv(typesPrefix+"INT", "10000")
+	os.Setenv(typesPrefix+"INT32", "100000")
+	os.Setenv(typesPrefix+"INT64", "1000000")
+	os.Setenv(typesPrefix+"UINT8", "200")
+	os.Setenv(typesPrefix+"UINT16", "2000")
+	os.Setenv(typesPrefix+"UINT", "20000")
+	os.Setenv(typesPrefix+"UINT32", "200000")
+	os.Setenv(typesPrefix+"UINT64", "2000000")
+	os.Setenv(typesPrefix+"FLOAT32", "1.234")
+	os.Setenv(typesPrefix+"FLOAT64", "2222.33333")
 
-	conf := EnvConfig1{}
-	err := Unmarshal(&conf)
-	if err != nil {
-		t.Errorf("Can't unmarshal config1 from environemnt variables. %s",
-			err.Error())
-		return
-	}
+	defer os.Unsetenv(typesPrefix + "BOOL")
+	defer os.Unsetenv(typesPrefix + "STR")
+	defer os.Unsetenv(typesPrefix + "INT8")
+	defer os.Unsetenv(typesPrefix + "INT16")
+	defer os.Unsetenv(typesPrefix + "INT")
+	defer os.Unsetenv(typesPrefix + "INT32")
+	defer os.Unsetenv(typesPrefix + "INT64")
+	defer os.Unsetenv(typesPrefix + "UINT8")
+	defer os.Unsetenv(typesPrefix + "UINT16")
+	defer os.Unsetenv(typesPrefix + "UINT")
+	defer os.Unsetenv(typesPrefix + "UINT32")
+	defer os.Unsetenv(typesPrefix + "UINT64")
+	defer os.Unsetenv(typesPrefix + "FLOAT32")
+	defer os.Unsetenv(typesPrefix + "FLOAT64")
 
-	if conf.Hostname != "localhost" {
-		t.Errorf("Expect Hostname: localhost, bug got: %s", conf.Hostname)
-	}
-
-	if conf.Port != TEST_PORT {
-		t.Errorf("Expect Port: %d, but got: %d", TEST_PORT, conf.Port)
-	}
-
-	if conf.User != TEST_USER {
-		t.Errorf("Expect User: %s, but got: %s", TEST_USER, conf.User)
-	}
-
-	if conf.Password != TEST_PASSWORD {
-		t.Errorf("Expect Password: %s, but got: %s", TEST_PASSWORD, conf.Password)
-	}
-
-	if conf.Home != "" {
-		t.Errorf("Expect Home is empty, but got: %s", conf.Home)
-	}
+	assert := assert.New(t)
+	typesConfig := test.TypesConfig{}
+	assert.NoError(Parse(&typesConfig))
+	assert.Equal(true, typesConfig.BoolValue)
+	assert.Equal("test-string", typesConfig.StrValue)
+	assert.Equal(int8(100), typesConfig.Int8Value)
+	assert.Equal(int16(1000), typesConfig.Int16Value)
+	assert.Equal(10000, typesConfig.IntValue)
+	assert.Equal(int32(100000), typesConfig.Int32Value)
+	assert.Equal(int64(1000000), typesConfig.Int64Value)
+	assert.Equal(uint8(200), typesConfig.Uint8Value)
+	assert.Equal(uint16(2000), typesConfig.Uint16Value)
+	assert.Equal(uint(20000), typesConfig.UintValue)
+	assert.Equal(uint32(200000), typesConfig.Uint32Value)
+	assert.Equal(uint64(2000000), typesConfig.Uint64Value)
+	assert.Equal(float32(1.234), typesConfig.Float32Value)
+	assert.Equal(float64(2222.33333), typesConfig.Float64Value)
 }
 
-type EnvConfig2 struct {
-	Config1 EnvConfig1
-	Server  string `env:"CONFIG_ENV_TEST_SERVER"`
+func TestTypesConfigWithErrorEnv(t *testing.T) {
+	assert := assert.New(t)
+	typesConfig := test.TypesConfig{}
+	typesPrefix := "CONFIG_TEST_"
+	os.Setenv(typesPrefix+"BOOL", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "BOOL")
+
+	os.Setenv(typesPrefix+"INT8", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "INT8")
+
+	os.Setenv(typesPrefix+"INT16", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "INT16")
+
+	os.Setenv(typesPrefix+"INT", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "INT")
+
+	os.Setenv(typesPrefix+"INT32", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "INT32")
+
+	os.Setenv(typesPrefix+"INT64", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "INT64")
+
+	os.Setenv(typesPrefix+"UINT8", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "UINT8")
+
+	os.Setenv(typesPrefix+"UINT16", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "UINT16")
+
+	os.Setenv(typesPrefix+"UINT", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "UINT")
+
+	os.Setenv(typesPrefix+"UINT32", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "UINT32")
+
+	os.Setenv(typesPrefix+"UINT64", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "UINT64")
+
+	os.Setenv(typesPrefix+"FLOAT32", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "FLOAT32")
+
+	os.Setenv(typesPrefix+"FLOAT64", "xxx")
+	assert.Error(Parse(&typesConfig))
+	os.Unsetenv(typesPrefix + "FLOAT64")
+
+	defer os.Unsetenv(typesPrefix + "BOOL")
+	defer os.Unsetenv(typesPrefix + "INT8")
+	defer os.Unsetenv(typesPrefix + "INT16")
+	defer os.Unsetenv(typesPrefix + "INT")
+	defer os.Unsetenv(typesPrefix + "INT32")
+	defer os.Unsetenv(typesPrefix + "INT64")
+	defer os.Unsetenv(typesPrefix + "UINT8")
+	defer os.Unsetenv(typesPrefix + "UINT16")
+	defer os.Unsetenv(typesPrefix + "UINT")
+	defer os.Unsetenv(typesPrefix + "UINT32")
+	defer os.Unsetenv(typesPrefix + "UINT64")
+	defer os.Unsetenv(typesPrefix + "FLOAT32")
+	defer os.Unsetenv(typesPrefix + "FLOAT64")
 }
 
-const (
-	TEST_SERVER = "test-server"
-)
+func TestSlicesConfigEnv(t *testing.T) {
+	prefix := "CONFIG_TEST_SLICES_"
+	os.Setenv(prefix+"PATHS", "/var:/usr:/home")
+	os.Setenv(prefix+"DEBUG", "/root;/log;/opt")
+	os.Setenv(prefix+"VALUES", "1,2,4,5")
 
-func setEnvConfig2() {
-	setEnvConfig1()
-	os.Setenv("CONFIG_ENV_TEST_SERVER", TEST_SERVER)
-}
+	defer os.Unsetenv(prefix + "PATHS")
+	defer os.Unsetenv(prefix + "DEBUG")
+	defer os.Unsetenv(prefix + "VALUES")
 
-func unsetEnvConfig2() {
-	unsetEnvConfig1()
-	os.Unsetenv("CONFIG_ENV_TEST_SERVER")
-}
-
-func TestEnvConfig2(t *testing.T) {
-	setEnvConfig2()
-	defer unsetEnvConfig2()
-
-	conf := EnvConfig2{}
-	err := Unmarshal(&conf)
-	if err != nil {
-		t.Errorf("Can't unmarshal config2 from environemnt variables. %s",
-			err.Error())
-		return
-	}
-
-	if conf.Config1.Hostname != TEST_HOSTNAME {
-		t.Errorf("Expect Hostname: %s, but got: %s", TEST_HOSTNAME, conf.Config1.Hostname)
-	}
-
-	if conf.Config1.Port != TEST_PORT {
-		t.Errorf("Expect Port: %d, but got: %d", TEST_PORT, conf.Config1.Port)
-	}
-
-	if conf.Config1.User != TEST_USER {
-		t.Errorf("Expect User: %s, but got: %s", TEST_USER, conf.Config1.User)
-	}
-
-	if conf.Config1.Password != TEST_PASSWORD {
-		t.Errorf("Expect Password: %s, but got: %s", TEST_PASSWORD, conf.Config1.Password)
-	}
-
-	if conf.Config1.Home != "" {
-		t.Errorf("Expect Home is empty, but got: %s", conf.Config1.Home)
-	}
-
-	if conf.Server != TEST_SERVER {
-		t.Errorf("Expect Server: %s, but got: %s", TEST_SERVER, conf.Server)
-	}
+	assert := assert.New(t)
+	conf := test.SlicesConfig{}
+	assert.NoError(Parse(&conf))
+	assert.Equal(3, len(conf.Paths))
+	assert.Equal("/var", conf.Paths[0])
+	assert.Equal("/usr", conf.Paths[1])
+	assert.Equal("/home", conf.Paths[2])
+	assert.Equal(3, len(conf.Debugs))
+	assert.Equal("/root", conf.Debugs[0])
+	assert.Equal("/log", conf.Debugs[1])
+	assert.Equal("/opt", conf.Debugs[2])
+	assert.Equal(4, len(conf.Values))
+	assert.Equal(1, conf.Values[0])
+	assert.Equal(2, conf.Values[1])
+	assert.Equal(4, conf.Values[2])
+	assert.Equal(5, conf.Values[3])
 }

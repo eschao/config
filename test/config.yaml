@@ -1,0 +1,8 @@
+dbHost: test-db-host
+dbPort: 9090
+dbUser: test-db-user
+dbPassword: test-db-password
+log:
+  path: /var/log/db
+  level: error
+

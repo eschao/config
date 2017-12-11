@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func SetValueWithBool(v reflect.Value, boolValue string) error {
@@ -45,69 +47,51 @@ func SetValueWithUintX(v reflect.Value, uintValue string, bitSize int) error {
 	return nil
 }
 
-/*
-func setFieldValueWithSlice(name string, v reflect.Value, envValue string,
-	separator string) error {
-	data := strings.Split(envValue, separator)
+func SetValueWithSlice(v reflect.Value, slice string, separator string) error {
+	data := strings.Split(slice, separator)
 	size := len(data)
 	if size > 0 {
 		slice := reflect.MakeSlice(v.Type(), size, size)
 		for i := 0; i < size; i++ {
 			ele := slice.Index(i)
 			kind := ele.Kind()
+			var err error
 			switch kind {
 			case reflect.Bool:
-				if err := setFieldValueWithBool(name, ele, data[i]); err != nil {
-					return err
-				}
+				err = SetValueWithBool(ele, data[i])
 			case reflect.String:
 				ele.SetString(data[i])
 			case reflect.Uint8:
-				if err := setFieldValueWithUintX(name, ele, data[i], 8); err != nil {
-					return err
-				}
+				err = SetValueWithUintX(ele, data[i], 8)
 			case reflect.Uint16:
-				if err := setFieldValueWithUintX(name, ele, data[i], 16); err != nil {
-					return err
-				}
+				err = SetValueWithUintX(ele, data[i], 16)
 			case reflect.Uint, reflect.Uint32:
-				if err := setFieldValueWithUintX(name, ele, data[i], 32); err != nil {
-					return err
-				}
+				err = SetValueWithUintX(ele, data[i], 32)
 			case reflect.Uint64:
-				if err := setFieldValueWithUintX(name, ele, data[i], 64); err != nil {
-					return err
-				}
+				err = SetValueWithUintX(ele, data[i], 64)
 			case reflect.Int8:
-				if err := setFieldValueWithIntX(name, ele, data[i], 8); err != nil {
-					return err
-				}
+				err = SetValueWithIntX(ele, data[i], 8)
 			case reflect.Int16:
-				if err := setFieldValueWithIntX(name, ele, data[i], 16); err != nil {
-					return err
-				}
+				err = SetValueWithIntX(ele, data[i], 16)
 			case reflect.Int, reflect.Int32:
-				if err := setFieldValueWithIntX(name, ele, data[i], 32); err != nil {
-					return err
-				}
+				err = SetValueWithIntX(ele, data[i], 32)
 			case reflect.Int64:
-				if err := setFieldValueWithIntX(name, ele, data[i], 64); err != nil {
-					return err
-				}
+				err = SetValueWithIntX(ele, data[i], 64)
 			case reflect.Float32:
-				if err := setFieldValueWithFloatX(name, ele, data[i], 32); err != nil {
-					return err
-				}
+				err = SetValueWithFloatX(ele, data[i], 32)
 			case reflect.Float64:
-				if err := setFieldValueWithFloatX(name, ele, data[i], 64); err != nil {
-					return err
-				}
+				err = SetValueWithFloatX(ele, data[i], 64)
 			default:
-				return fmt.Errorf("%s: can't support type: %s", name, kind.String())
+				return fmt.Errorf("Can't support type: %s", kind.String())
+			}
+
+			if err != nil {
+				return err
 			}
 		}
+
 		v.Set(slice)
 	}
 
 	return nil
-}*/
+}

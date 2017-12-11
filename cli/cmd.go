@@ -137,32 +137,27 @@ func (this *Command) Init(i interface{}) error {
 
 func (this *Command) parseValue(v reflect.Value) error {
 	typeOfStruct := v.Type()
+	var err error
 
-	for i := 0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField() && err == nil; i++ {
 		valueOfField := v.Field(i)
 		kindOfField := valueOfField.Kind()
 		structOfField := typeOfStruct.Field(i)
 
 		if kindOfField == reflect.Ptr {
 			if !valueOfField.IsNil() && valueOfField.CanSet() {
-				cmd := this.createCliFlagSet(structOfField.Tag)
-				if err := cmd.Init(valueOfField.Interface()); err != nil {
-					return err
-				}
+				cmd := this.createSubCommand(structOfField.Tag)
+				err = cmd.Init(valueOfField.Interface())
 			}
 		} else if kindOfField == reflect.Struct {
-			cmd := this.createCliFlagSet(structOfField.Tag)
-			if err := cmd.parseValue(valueOfField); err != nil {
-				return err
-			}
+			cmd := this.createSubCommand(structOfField.Tag)
+			err = cmd.parseValue(valueOfField)
 		} else {
-			if err := this.addFlag(valueOfField, structOfField); err != nil {
-				return err
-			}
+			err = this.addFlag(valueOfField, structOfField)
 		}
 	}
 
-	return nil
+	return err
 }
 
 func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
@@ -207,7 +202,7 @@ func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
 	return nil
 }
 
-func (this *Command) createCliFlagSet(tag reflect.StructTag) *Command {
+func (this *Command) createSubCommand(tag reflect.StructTag) *Command {
 	cmdTag, ok := tag.Lookup("cmd")
 	if !ok || cmdTag == "" {
 		return this
