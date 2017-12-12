@@ -13,8 +13,17 @@ go get github.com/eschao/config
 ```
 
 ## Usage
-#### 1. Defines **default** values
-**config** library supports defining a default value for structure members by using **default** keyword in structure tags
+#### I. Data types
+Like JSON, Yaml, **config** uses tags to define configurations. It supports the following golang data types:
+  * bool
+  * string
+  * int8, int16, int, int32, int64
+  * uint8, uint16, uint, uint32, uint64
+  * float32, float64
+  * slice type. e.g: []string, []int ...
+  
+#### II. Defines **default** values
+Using **default** keyword in structure tags to define default value. Example codes:
 ```golang
   type Log struct {
     Path  string `default:"/var/logs"`
@@ -22,14 +31,14 @@ go get github.com/eschao/config
   }
 ```
 
-After that, calls ```config.ParseDefault(interface{})``` to set it on structure instance, example codes as the below:
+After that, calls ```config.ParseDefault(interface{})``` to set structure instance with default values. Example codes:
 ```golang
   logConfig := Log{}
   config.ParseDefault(&logConfig)
 ```
 
-#### 2. Reads configurations from JSON file
-Like analyzing JSON object from file, reading configurations from JSON file is also simple:
+#### III. Reads configurations from JSON and Yaml files
+##### 1. Using ```json``` to define configuration name
 ```golang
   type Database struct {
     Host string     `json:"host"`
@@ -37,6 +46,17 @@ Like analyzing JSON object from file, reading configurations from JSON file is a
     Username string `json:"username" default:"admin"`
     Password string `json:"password" default:"admin"`
     Log Log         `json:"log"`
+  }
+```
+
+##### 2. Using ```yaml``` to define configuration name
+```golang
+  type Database struct {
+    Host string     `yaml:"host"`
+    Port int        `yaml:"port"`
+    Username string `yaml:"username" default:"admin"`
+    Password string `yaml:"password" default:"admin"`
+    Log Log         `yaml:"log"`
   }
 ```
 
