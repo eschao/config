@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2017 eschao <esc.chao@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package env
 
 import (
@@ -8,10 +23,25 @@ import (
 	"github.com/eschao/config/utils"
 )
 
+// Parse parses given structure interface, extracts environment definitions
+// from its tag and sets structure with defined environement variables
 func Parse(i interface{}) error {
 	return ParseWith(i, "")
 }
 
+// ParseWith parses with given structure interface and environment name prefix
+// It is normally used in nested structure.
+// For example: we have such structure
+// type Database struct {
+//   Host string `env:"HOST"`
+// }
+
+// type Server struct {
+//   Server string `env:"SERVER"`
+//   DB     Database `env:"DB_"`
+// }
+// The Server.DB.Host will be mapped to environment variable: DB_HOST which is
+// concatenated from DB tag in Server struct and Host tag in Database struct
 func ParseWith(i interface{}, prefix string) error {
 	ptrRef := reflect.ValueOf(i)
 
@@ -29,6 +59,7 @@ func ParseWith(i interface{}, prefix string) error {
 	return parseValue(valueOfStruct, prefix)
 }
 
+// parseValue parses a reflect.Value object
 func parseValue(v reflect.Value, prefix string) error {
 	typeOfStruct := v.Type()
 	var err error
@@ -55,6 +86,7 @@ func parseValue(v reflect.Value, prefix string) error {
 	return err
 }
 
+// getEnvValue get environment value
 func getEnvValue(envName string, f reflect.StructField) (string, bool) {
 	//fmt.Printf("Lookup ENV: %s\n", envName)
 	envValue, ok := os.LookupEnv(envName)
@@ -65,6 +97,7 @@ func getEnvValue(envName string, f reflect.StructField) (string, bool) {
 	return envValue, ok
 }
 
+// setFieldValue sets a reflect.Value with environment value
 func setFieldValue(v reflect.Value, f reflect.StructField, prefix string) error {
 	envName := f.Tag.Get("env")
 	if envName == "" {

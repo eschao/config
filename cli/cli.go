@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2017 eschao <esc.chao@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package cli
 
 import (
@@ -11,10 +26,13 @@ import (
 	"github.com/eschao/config/utils"
 )
 
+// anyValue wraps a reflect.Value object and implements flag.Value interface
+// the reflect.Value could be Bool, String, Int, Uint and Float
 type anyValue struct {
 	any reflect.Value
 }
 
+// newAnyValue creates an anyValue object
 func newAnyValue(v reflect.Value) *anyValue {
 	return &anyValue{any: v}
 }
@@ -78,6 +96,8 @@ func (this *anyValue) Set(v string) error {
 	return nil
 }
 
+// sliceValue wraps a reflect.Value object and implements flag.Value interface
+// the reflect.Value could only be a sliceable type
 type sliceValue struct {
 	value     reflect.Value
 	separator string
@@ -99,19 +119,26 @@ func (this *sliceValue) Set(v string) error {
 	return utils.SetValueWithSlice(this.value, v, sp)
 }
 
+// errorHanling is a global flag.ErrorHandling
 var errorHandling = flag.ExitOnError
 
+// UsageFunc defines a callback function for printing command usage
 type UsageFunc func(*Command) func()
 
+// usageHandler is a global UsageFunc callback, default is nil which means it
+// will use default flag.Usage function
 var usageHandler UsageFunc = nil
 
+// Command defines a command line structure
 type Command struct {
-	Name        string
-	FlagSet     *flag.FlagSet
-	Usage       string
-	SubCommands map[string]*Command
+	Name        string              // command name
+	FlagSet     *flag.FlagSet       // command arguments
+	Usage       string              // command usage description
+	SubCommands map[string]*Command // sub-commands
 }
 
+// New creates a command with given name, the command will use default
+// ErrorHandling: flag.ExitOnError and default usage function: flag.Usage
 func New(name string) *Command {
 	cmd := Command{
 		Name:        name,
@@ -122,6 +149,8 @@ func New(name string) *Command {
 	return &cmd
 }
 
+// NewWith creates a command with given name, error handling and customized
+// usage function
 func NewWith(name string, errHandling flag.ErrorHandling,
 	usageHandling UsageFunc) *Command {
 	errorHandling = errHandling
@@ -139,6 +168,9 @@ func NewWith(name string, errHandling flag.ErrorHandling,
 	return &cmd
 }
 
+// Init analyzes the given structure interface, extracts cli definitions from
+// its tag and installs command flagset by flag APIs. The interface must be a
+// structure pointer, otherwise will return an error
 func (this *Command) Init(i interface{}) error {
 	ptrRef := reflect.ValueOf(i)
 
@@ -156,6 +188,7 @@ func (this *Command) Init(i interface{}) error {
 	return this.parseValue(valueOfStruct)
 }
 
+// parseValue parses a reflect.Value object and extracts cli definitions
 func (this *Command) parseValue(v reflect.Value) error {
 	typeOfStruct := v.Type()
 	var err error
@@ -181,6 +214,7 @@ func (this *Command) parseValue(v reflect.Value) error {
 	return err
 }
 
+// addFlag installs a command flag variable by flag API
 func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
 	cmdTag, ok := f.Tag.Lookup("cli")
 	if !ok || cmdTag == "" {
@@ -226,6 +260,7 @@ func (this *Command) addFlag(v reflect.Value, f reflect.StructField) error {
 	return nil
 }
 
+// createSubCommand creates sub-commands
 func (this *Command) createSubCommand(tag reflect.StructTag) *Command {
 	cmdTag, ok := tag.Lookup("cli")
 	if !ok || cmdTag == "" {
@@ -253,6 +288,8 @@ func (this *Command) createSubCommand(tag reflect.StructTag) *Command {
 	return &cmd
 }
 
+// Parse parses values from command line and save values into given structure.
+// The Init(interface{}) function must be called before parsing
 func (this *Command) Parse(args []string) error {
 	if err := this.FlagSet.Parse(args); err != nil {
 		return err

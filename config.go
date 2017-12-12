@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2017 eschao <esc.chao@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package config
 
 import (
@@ -15,6 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Default configuration file
 const (
 	DefaultJSONConfig = "config.json"
 	DefaultYamlConfig = "config.yaml"
@@ -27,6 +43,10 @@ const (
 	PropConfigType = "properties"
 )
 
+// ParseDefault parses the given structure, extract default value from its tag
+// and set structure with these values.
+// Normally, ParseDefault should be called before any other parsing functions
+// to set default values for structure.
 func ParseDefault(i interface{}) error {
 	ptrRef := reflect.ValueOf(i)
 
@@ -108,10 +128,13 @@ func parseValue(v reflect.Value) error {
 	return err
 }
 
+// ParseEnv parses given structure interface and set it with corresponding
+// environment values
 func ParseEnv(i interface{}) error {
 	return env.ParseWith(i, "")
 }
 
+// ParseCli parses given structure interface and set it with command line input
 func ParseCli(i interface{}) error {
 	cli := cli.New(os.Args[0])
 	if err := cli.Init(i); err != nil {
@@ -123,11 +146,19 @@ func ParseCli(i interface{}) error {
 	return nil
 }
 
+// ParseConfig parses given structure interface and set it with default
+// configuration file.
+// configFlag is a command line flag to tell where to locate configure file.
+// If the config file doesn't exist, the default config fill will be searched
+// under the same folder with the fixed order: config.json, config.yaml and
+// config.properties
 func ParseConfig(i interface{}, configFlag string) error {
 	configFile := flag.String(configFlag, "", "Specifiy configuration file")
 	return ParseConfigFile(i, *configFile)
 }
 
+// ParseConfigFile parses given structure interface and set its value with
+// the specified configuration file
 func ParseConfigFile(i interface{}, configFile string) error {
 	var err error
 	if configFile == "" {
@@ -156,6 +187,7 @@ func ParseConfigFile(i interface{}, configFile string) error {
 	return nil
 }
 
+// parseJSON parses JSON file and set structure with its value
 func parseJSON(i interface{}, jsonFile string) error {
 	raw, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
@@ -165,6 +197,7 @@ func parseJSON(i interface{}, jsonFile string) error {
 	return json.Unmarshal(raw, i)
 }
 
+// parseYaml parses Yaml file and set structure with its value
 func parseYaml(i interface{}, yamlFile string) error {
 	raw, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
@@ -174,10 +207,14 @@ func parseYaml(i interface{}, yamlFile string) error {
 	return yaml.Unmarshal(raw, i)
 }
 
+// parseProp parses Properties file and set structure with its value
 func parseProp(i interface{}, propFile string) error {
 	return fmt.Errorf("Properties config has not implemented!")
 }
 
+// getDefaultConfigFile returns a existing default config file. The checking
+// order is fixed with beginning from: config.json to config.yaml and
+// config.properties
 func getDefaultConfigFile() (string, error) {
 	exe, err := os.Executable()
 	if err != nil {
@@ -207,6 +244,8 @@ func getDefaultConfigFile() (string, error) {
 	return "", fmt.Errorf("No default config file found in path: %s", path)
 }
 
+// getConfigFileType analyzes config file extension name and return
+// corresponding type: json, yaml or properties
 func getConfigFileType(configFile string) (string, error) {
 	ext := filepath.Ext(configFile)
 	if ext == ".json" {
