@@ -161,12 +161,46 @@ When default values are defined in tags, calls ```config.ParseDefault(interface{
   logConfig := Log{}
   config.ParseDefault(&logConfig)
 ```
->Note: Other parsing functions won't set structure instance with default values whatever if the configuration is provided or not
+>Note: Other parsing functions won't set structure instance with default values whatever if the configuration value is provided or not
 
-#### 2. Parses configuration files:
+#### 2. Parses from Environment variables
+```golang
+  dbConfig := Database{}
+  config.ParseEnv(&dbConfig)
+```
 
-Parsing configurations from JSON:
+#### 3. Parses from Command line
+```golang
+  dbConfig := Database{}
+  config.ParseCli(&dbConfig)
+```
+
+#### 4. Parses from default configuration files
+Calls **ParseConfigFile(interface{}, string)** to parse given configuration file:
 ```golang
   dbConfig := Database{}
   config.ParseConfigFile(&dbConfig, "config.json")
 ```
+
+If the configuration file is not given, the default configuration files: **config.json** and **config.yaml** will be located under the same folder with fixed searching order.
+
+The **config.json** will be always first located, if it doesn't exist, then checks **config.yaml**. If all of them are not found, parsing will fail.
+```golang
+  dbConfig := Database{}
+  config.ParseConfigFile(&dbConfig, "")
+```
+
+#### 4. Parses from configuration file specified by command line
+Calls **ParseConfig(interface{}, string)** to parse the configuration file given by command line. The second parameter is a command line argument which is used to specifiy config file:
+```golang
+  dbConfig := Database{}
+  config.ParseConfig(&dbConfig, "c")
+```
+Run application like:
+```shell
+  ./main -c config.json
+```
+**ParseConfig()** will analyze command line argument and extract **config.json** from argument **-c**
+
+
+
