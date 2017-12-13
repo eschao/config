@@ -113,7 +113,7 @@ Corresponding Environment variables:
  export DB_LOG_PATH=/var/logs/db
  export DB_LOG_LEVEL=debug
 ```
-Since the ```Log``` is a structure and nested in ```Database``` structure, the tag of ```Log``` and tags of its structure members will be combined to be an unique environment variable, for example: ```Path``` will be mapped to environment var: ```DB_LOG_PATH```. But if the ```Log``` has no tag defination, only tags of its structure members will be used, that means the ```Path``` will be mapped to ```PATH```.
+Since the ```Log``` is a structure and nested in ```Database``` structure, the tag of ```Log``` and tags of its structure members will be combined to be an unique environment variable, for example: ```Path``` will be mapped to environment var: ```DB_LOG_PATH```. But if the ```Log``` has no tag definition, only tags of its structure members will be used, that means the ```Path``` will be mapped to ```PATH```.
 
 #### 6. Defines configuration name for Command line
 Using **cli** keyword to define configuration name
