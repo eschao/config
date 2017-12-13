@@ -13,8 +13,20 @@ go get github.com/eschao/config
 ```
 
 ## Usage
-#### I. Data types
-Like JSON, Yaml, **config** uses tags to define configurations. It supports the following golang data types:
+### I. Define configuration name in structure tags
+Like JSON, Yaml, **config** uses tags to define configurations:
+
+| Tag | Example | Function |
+|-----|---------|------|
+| json | Host string `json:"host"` | Maps `Host` to a JSON field: **host** |
+| yaml | Host string `yaml:"host"` | Maps `Host` to a Yaml field: **host** |
+| env | Host string `env:"HOST"` | Maps `Host` to a Environment variable: **HOST** |
+| cli | Host string `cli:"host database host"` | Maps `Host` to a command line argument: **-host** or **--host** |
+| default | Port int `default:"8080"` | Defines the port with default value: **8080** |
+
+
+#### 1. Data types
+ **config** supports the following golang data types:
   * bool
   * string
   * int8, int16, int, int32, int64
@@ -22,7 +34,7 @@ Like JSON, Yaml, **config** uses tags to define configurations. It supports the 
   * float32, float64
   * slice type. e.g: []string, []int ...
   
-#### II. Defines **default** values
+#### 2. Defines **default** values
 Using **default** keyword in structure tags to define default value. Example codes:
 ```golang
   type Log struct {
@@ -37,8 +49,8 @@ After that, calls ```config.ParseDefault(interface{})``` to set structure instan
   config.ParseDefault(&logConfig)
 ```
 
-#### III. Reads configurations from JSON and Yaml files
-##### 1. Using ```json``` to define configuration name
+#### 3. Defines configruation name for JSON
+Like parsing JSON object, using **json** keyword to define configuration name
 ```golang
   type Database struct {
     Host string     `json:"host"`
@@ -48,6 +60,46 @@ After that, calls ```config.ParseDefault(interface{})``` to set structure instan
     Log Log         `json:"log"`
   }
 ```
+
+#### 4. Defines configuration name for Yaml
+Like parsing Yaml object, using **yaml** keyword to define configuration name
+```golang
+  type Database struct {
+    Host string     `yaml:"host"`
+    Port int        `yaml:"port"`
+    Username string `yaml:"username" default:"admin"`
+    Password string `yaml:"password" default:"admin"`
+    Log Log         `yaml:"log"`
+  }
+```
+
+#### 5. Defines configuration name for Environment variable
+Using **env** keyword to define configuration name
+```golang
+  type Database struct {
+    Host string     `env:"DB_HOST"`
+    Port int        `env:"DB_PORT"`
+    Username string `env:"DB_USER" default:"admin"`
+    Password string `env:"DB_PASSWORD" default:"admin"`
+    Log Log         `env:"DB_LOG_"`
+  }
+```
+
+#### 6. Defines configuration name for Command line
+Using **cli** keyword to define configuration name
+```golang
+  type Database struct {
+    Host string     `cli:"host database host name"`
+    Port int        `cli:"port database port"`
+    Username string `cli:"username database username" default:"admin"`
+    Password string `cli:"password database password" default:"admin"`
+    Log Log         `cli:"log database log configurations"`
+  }
+```
+
+#### III. Reads configurations from JSON and Yaml files
+##### 1. Using ```json``` to define configuration name
+
 
 ##### 2. Using ```yaml``` to define configuration name
 ```golang
