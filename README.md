@@ -221,7 +221,7 @@ Examples:
     Log      Log    `json:"log"    yaml:"log"    env:"DB_LOG_"   cli:"log database log configurations"`
   }
 ```
-Then, you can parse them like below:
+Then, you can parse as below:
 ```golang
  dbConfig := Database{}
  
@@ -250,4 +250,7 @@ Then, you can parse them like below:
 ```
 
 You don't need call all of them. Invokes parsing function that your need.
+
+## License
+This project is licensed under the Apache License Version 2.0.
 
