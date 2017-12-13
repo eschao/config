@@ -185,7 +185,7 @@ Calls **ParseConfigFile(interface{}, string)** to parse given configuration file
 
 If the configuration file is not given, the default configuration files: **config.json** and **config.yaml** will be located under the same folder with fixed searching order.
 
-The **config.json** will be always first located, if it doesn't exist, then checks **config.yaml**. If all of them are not found, parsing will fail.
+The **config.json** will always be located first, if it doesn't exist, then checks **config.yaml**. If all of them are not found, parsing will fail.
 ```golang
   dbConfig := Database{}
   config.ParseConfigFile(&dbConfig, "")
@@ -203,7 +203,7 @@ Run application like:
 ```
 **ParseConfig()** will analyze command line argument and extract **config.json** from argument **-c**
 
-### III. Multi-configurations 
+### III. Multi-Configurations 
 You can define all supported configuration tags in a structure and call corresponding functions in your desired order to parse.
 
 Examples:
@@ -247,6 +247,9 @@ Then, you can parse as below:
  if err != nil {
    err = config.ParseCli(&dbConfig)
  }
+ 
+ // check if all requried configurations are set
+ ...
 ```
 
 You don't need call all of them. Invokes parsing function that your need.
