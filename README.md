@@ -44,12 +44,6 @@ Using **default** keyword in structure tags to define default value:
   }
 ```
 
-After that, calls ```config.ParseDefault(interface{})``` to set structure instance with default values. Example codes:
-```golang
-  logConfig := Log{}
-  config.ParseDefault(&logConfig)
-```
-
 #### 3. Defines configruation name for JSON
 Like parsing JSON object, using **json** keyword to define configuration name:
 ```golang
@@ -65,12 +59,12 @@ Like parsing JSON object, using **json** keyword to define configuration name:
 Corresponding JSON file:
 ```json
  {
-   "host": "test.db.hostname"
-   "port": 8080
-   "username": "amdin"
+   "host": "test.db.hostname",
+   "port": 8080,
+   "username": "amdin",
    "password": "admin"
    "log": {
-     "path": "/var/logs/db"
+     "path": "/var/logs/db",
      "level": "debug"
    }
  }
@@ -119,6 +113,7 @@ Corresponding Environment variables:
  export DB_LOG_PATH=/var/logs/db
  export DB_LOG_LEVEL=debug
 ```
+Since the ```Log``` is a structure and nested in ```Database``` structure, the tag of ```Log``` and tags of its structure members will be combined to be an unique environment variable, for example: ```Path``` will be mapped to environment var: ```DB_LOG_PATH```. But if the ```Log``` has no tag defination, only tags of its structure members will be used, that means the ```Path``` will be mapped to ```PATH```.
 
 #### 6. Defines configuration name for Command line
 Using **cli** keyword to define configuration name
@@ -132,20 +127,43 @@ Using **cli** keyword to define configuration name
   }
 ```
 
-#### III. Reads configurations from JSON and Yaml files
-##### 1. Using ```json``` to define configuration name
+Corresponding command line:
+```shell
+  ./main -host test.db.hostname -port 8080 -username admin -password admin log -path /var/logs/db -level debug
+```
+or
+```shell
+  ./main -host=test.db.hostname -port=8080 -username=admin -password=admin log -path=/var/logs/db -level=debug
+```
 
-
-##### 2. Using ```yaml``` to define configuration name
+#### 7. Defines configuration name as a slice type
+Using **separator** to split string as a slice:
 ```golang
-  type Database struct {
-    Host string     `yaml:"host"`
-    Port int        `yaml:"port"`
-    Username string `yaml:"username" default:"admin"`
-    Password string `yaml:"password" default:"admin"`
-    Log Log         `yaml:"log"`
+  type Log struct {
+    Levels []string `env:"LEVELS" cli:"levels log levels" separator:";"`
   }
 ```
+
+If the separator is not given, its default is **:**, The separator only works on **env** and **cli** tags
+```golang
+  logConfig := Log{}
+  // export LEVELS=debug;error;info
+  config.ParseEnv(&logConfig)
+  // logConfig[0] == debug
+  // logConfig[1] == error
+  // logConfig[2] == info
+```
+
+### II. Parses configurations
+#### 1. Parses default values
+When default values are defined in tags, calls ```config.ParseDefault(interface{})``` to assign them to given structure instance **BEFORE** parsing any other configuration types:
+```golang
+  logConfig := Log{}
+  config.ParseDefault(&logConfig)
+```
+>Note: Other parsing functions won't set structure instance with default values whatever if the configuration is provided or not
+
+#### 2. Parses configuration files:
 
 Parsing configurations from JSON:
 ```golang
