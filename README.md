@@ -23,6 +23,7 @@ Like JSON, Yaml, **config** uses tags to define configurations:
 | env | Host string `env:"HOST"` | Maps `Host` to a Environment variable: **HOST** |
 | cli | Host string `cli:"host database host"` | Maps `Host` to a command line argument: **-host** or **--host** |
 | default | Port int `default:"8080"` | Defines the port with default value: **8080** |
+| separator | Path string `json:"path" separator:";"` | Separator is used to split string to a slice |
 
 
 #### 1. Data types
@@ -35,7 +36,7 @@ Like JSON, Yaml, **config** uses tags to define configurations:
   * slice type. e.g: []string, []int ...
   
 #### 2. Defines **default** values
-Using **default** keyword in structure tags to define default value. Example codes:
+Using **default** keyword in structure tags to define default value:
 ```golang
   type Log struct {
     Path  string `default:"/var/logs"`
@@ -50,7 +51,7 @@ After that, calls ```config.ParseDefault(interface{})``` to set structure instan
 ```
 
 #### 3. Defines configruation name for JSON
-Like parsing JSON object, using **json** keyword to define configuration name
+Like parsing JSON object, using **json** keyword to define configuration name:
 ```golang
   type Database struct {
     Host string     `json:"host"`
@@ -60,6 +61,20 @@ Like parsing JSON object, using **json** keyword to define configuration name
     Log Log         `json:"log"`
   }
 ```
+
+Corresponding JSON file:
+```json
+ {
+   "host": "test.db.hostname"
+   "port": 8080
+   "username": "amdin"
+   "password": "admin"
+   "log": {
+     "path": "/var/logs/db"
+     "level": "debug"
+   }
+ }
+ ```
 
 #### 4. Defines configuration name for Yaml
 Like parsing Yaml object, using **yaml** keyword to define configuration name
@@ -72,7 +87,17 @@ Like parsing Yaml object, using **yaml** keyword to define configuration name
     Log Log         `yaml:"log"`
   }
 ```
-
+Corresponding Yaml file:
+```yaml
+ host: test.db.hostname
+ port: 8080
+ username: amdin
+ password: admin
+ log:
+   path: /var/logs/db
+   level: debug
+ ```
+ 
 #### 5. Defines configuration name for Environment variable
 Using **env** keyword to define configuration name
 ```golang
@@ -83,6 +108,16 @@ Using **env** keyword to define configuration name
     Password string `env:"DB_PASSWORD" default:"admin"`
     Log Log         `env:"DB_LOG_"`
   }
+```
+
+Corresponding Environment variables:
+```shell
+ export DB_HOST=test.db.hostname
+ export DB_PORT=8080
+ export DB_USER=admin
+ export DB_PASSWORD=admin
+ export DB_LOG_PATH=/var/logs/db
+ export DB_LOG_LEVEL=debug
 ```
 
 #### 6. Defines configuration name for Command line
