@@ -62,7 +62,7 @@ Corresponding JSON file:
    "host": "test.db.hostname",
    "port": 8080,
    "username": "amdin",
-   "password": "admin"
+   "password": "admin",
    "log": {
      "path": "/var/logs/db",
      "level": "debug"
@@ -126,6 +126,7 @@ Using **cli** keyword to define configuration name
     Log Log         `cli:"log database log configurations"`
   }
 ```
+For **cli** definition, the string before the first space is command line argument, the rest string are the command line usage and will be oupputed when printing usage
 
 Corresponding command line:
 ```shell
@@ -202,5 +203,51 @@ Run application like:
 ```
 **ParseConfig()** will analyze command line argument and extract **config.json** from argument **-c**
 
+### III. Multi-configurations 
+You can define all supported configuration tags in a structure and call corresponding functions in your desired order to parse.
 
+Examples:
+```golang
+  type Log struct {
+    Path   string `json:"path" yaml:"path" env:"PATH" cli:"path log path" default:"/var/logs"`
+    Levels string `json:"levels" yaml:"levels" env:"LEVELS" cli:"levels log levels" default:"debug;error"`
+  }
+  
+  type Database struct {
+    Host     string `json:"host"   yaml:"host"   env:"DB_HOST"   cli:"host database host name"`
+    Port     int    `json:"port"   yaml:"port"   env:"DB_PORT"   cli:"port database port"`
+    Username string `json:"user"   yaml" user"   env:"DB_USER"   cli:"username database username" default:"admin"`
+    Password string `json:"passwd" yaml:"passwd" env:"DB_PASSWD" cli:"password database password" default:"admin"`
+    Log      Log    `json:"log"    yaml:"log"    env:"DB_LOG_"   cli:"log database log configurations"`
+  }
+```
+Then, you can parse them like below:
+```golang
+ dbConfig := Database{}
+ 
+ // parse default values
+	if err := config.ParseDefault(&dbConfig); err != nil {
+		// error handling
+	}
+
+	// parse configuration file from command line
+	err := config.ParseConfig(&dbConfig, "c")
+ 
+ // parse default configurations
+ if err != nil {
+	  err = config.ParseConfigFile(&dbConfig), "")
+	}
+ 
+ // parse environment variables
+ if err != nil {
+   err = config.ParseEnv(&dbConfig)
+ }
+ 
+ // parse command line
+ if err != nil {
+   err = config.ParseCli(&dbConfig)
+ }
+```
+
+You don't need call all of them. Invokes parsing function that your need.
 
