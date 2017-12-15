@@ -104,7 +104,7 @@ func setFieldValue(v reflect.Value, f reflect.StructField, prefix string) error 
 		return nil
 	}
 
-	envValue, ok := getEnvValue(prefix+envName, f)
+	envValue, ok := os.LookupEnv(prefix + envName)
 	if !ok {
 		return nil
 	}
