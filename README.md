@@ -48,11 +48,11 @@ Using **default** keyword in structure tags to define default value:
 Like parsing JSON object, using **json** keyword to define configuration name:
 ```golang
   type Database struct {
-    Host string     `json:"host"`
-    Port int        `json:"port"`
+    Host     string `json:"host"`
+    Port     int    `json:"port"`
     Username string `json:"username" default:"admin"`
     Password string `json:"password" default:"admin"`
-    Log Log         `json:"log"`
+    Log      Log    `json:"log"`
   }
 ```
 
@@ -74,11 +74,11 @@ Corresponding JSON file:
 Like parsing Yaml object, using **yaml** keyword to define configuration name
 ```golang
   type Database struct {
-    Host string     `yaml:"host"`
-    Port int        `yaml:"port"`
+    Host     string `yaml:"host"`
+    Port     int    `yaml:"port"`
     Username string `yaml:"username" default:"admin"`
     Password string `yaml:"password" default:"admin"`
-    Log Log         `yaml:"log"`
+    Log      Log    `yaml:"log"`
   }
 ```
 Corresponding Yaml file:
@@ -96,11 +96,11 @@ Corresponding Yaml file:
 Using **env** keyword to define configuration name
 ```golang
   type Database struct {
-    Host string     `env:"DB_HOST"`
-    Port int        `env:"DB_PORT"`
+    Host     string `env:"DB_HOST"`
+    Port     int    `env:"DB_PORT"`
     Username string `env:"DB_USER" default:"admin"`
     Password string `env:"DB_PASSWORD" default:"admin"`
-    Log Log         `env:"DB_LOG_"`
+    Log      Log    `env:"DB_LOG_"`
   }
 ```
 
@@ -119,11 +119,11 @@ Since the ```Log``` is a structure and nested in ```Database``` structure, the t
 Using **cli** keyword to define configuration name
 ```golang
   type Database struct {
-    Host string     `cli:"host database host name"`
-    Port int        `cli:"port database port"`
+    Host     string `cli:"host database host name"`
+    Port     int    `cli:"port database port"`
     Username string `cli:"username database username" default:"admin"`
     Password string `cli:"password database password" default:"admin"`
-    Log Log         `cli:"log database log configurations"`
+    Log      Log    `cli:"log database log configurations"`
   }
 ```
 For **cli** definition, the string before the first space is command line argument, the rest string are the command line usage and will be oupputed when printing usage
@@ -226,17 +226,17 @@ Then, you can parse as below:
  dbConfig := Database{}
  
  // parse default values
-	if err := config.ParseDefault(&dbConfig); err != nil {
-		// error handling
-	}
+ if err := config.ParseDefault(&dbConfig); err != nil {
+   // error handling
+ }
 
-	// parse configuration file from command line
-	err := config.ParseConfig(&dbConfig, "c")
+ // parse configuration file from command line
+ err := config.ParseConfig(&dbConfig, "c")
  
  // parse default configurations
  if err != nil {
-	  err = config.ParseConfigFile(&dbConfig), "")
-	}
+   err = config.ParseConfigFile(&dbConfig), "")
+ }
  
  // parse environment variables
  if err != nil {
