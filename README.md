@@ -162,7 +162,7 @@ When default values are defined in tags, calls ```config.ParseDefault(interface{
   logConfig := Log{}
   config.ParseDefault(&logConfig)
 ```
->Note: Other parsing functions won't set structure instance with default values whatever if the configuration value is provided or not
+>Note: Other parsing functions don't set structure instance with default values whatever if the configuration value is provided or not
 
 #### 2. Parses from Environment variables
 ```golang
@@ -201,7 +201,7 @@ Run application like:
 ```shell
   ./main -c config.json
 ```
-**ParseConfig()** will analyze command line argument and extract **config.json** from argument **-c**
+**ParseConfig()** will analyze command line arguments and get configure file: **config.json** from argument **-c**
 
 ### III. Multi-Configurations 
 You can define all supported configuration tags in a structure and call corresponding functions in your desired order to parse.
@@ -252,7 +252,7 @@ Then, you can parse as below:
  ...
 ```
 
-You don't need call all of them. Invokes parsing function that your need.
+You don't need to call all of them. Just invokes parsing function that your need.
 
 ## License
 This project is licensed under the Apache License Version 2.0.
