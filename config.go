@@ -154,6 +154,7 @@ func ParseCli(i interface{}) error {
 // config.properties
 func ParseConfig(i interface{}, configFlag string) error {
 	configFile := flag.String(configFlag, "", "Specifiy configuration file")
+	flag.Parse()
 	return ParseConfigFile(i, *configFile)
 }
 
